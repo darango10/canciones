@@ -2,12 +2,14 @@ import React, {Fragment, useEffect, useState} from 'react';
 import Formulario from "./components/Formulario";
 import axios from 'axios'
 import Cancion from "./components/Cancion";
+import Info from "./components/Info";
 
 function App() {
 
     //Definimos state
     const [busquedaLetra, guardarBusquedaLetra] = useState({});
     const [letra, guardarLetra] = useState('');
+    const [info, guardarInfo] = useState({})
 
     useEffect(() => {
         if (Object.keys(busquedaLetra).length === 0) return;
@@ -15,11 +17,17 @@ function App() {
         const consultarAPILetra = async () => {
             const {artista, cancion} = busquedaLetra
             const url = `https://api.lyrics.ovh/v1/${artista}/${cancion}`
-            const respuesta = await axios.get(url)
-            guardarLetra(respuesta.data.lyrics)
+            const url2 = `https://www.theaudiodb.com/api/v1/json/1/search.php?s=${artista}`
+
+            const [letra, informacion] = await Promise.all([
+                axios.get(url),
+                axios.get(url2)
+            ])
+            guardarLetra(letra.data.lyrics)
+            guardarInfo(informacion.data.artists[0]);
         }
         consultarAPILetra()
-    }, [busquedaLetra])
+    }, [busquedaLetra, info])
 
     return (
         <Fragment>
@@ -27,7 +35,7 @@ function App() {
             <div className="container mt-5">
                 <div className="row">
                     <div className="col-md-6">
-                        Artista
+                        <Info info={info}/>
                     </div>
                     <div className="col-md-6">
                         <Cancion letra={letra}/>
